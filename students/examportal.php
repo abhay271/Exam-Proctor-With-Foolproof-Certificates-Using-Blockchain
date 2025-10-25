@@ -861,10 +861,23 @@ while ($rowd = mysqli_fetch_array($res)) {
       nextBtn.disabled = currentQuestion === totalQuestions - 1;
       nextBtn.textContent = currentQuestion === totalQuestions - 1 ? "Review" : "Next";
 
-      // Generate question HTML
+      // Generate question HTML with TTS button
+      // Prepare full text for TTS (question + all options)
+      const fullText = `Question ${qNum}. ${q.qstn}. Option A: ${q.qstn_o1}. Option B: ${q.qstn_o2}. Option C: ${q.qstn_o3}. Option D: ${q.qstn_o4}`;
+      
       let questionHTML = `
         <div class="question" data-index="${qNum}">
-          <span><b>Q${qNum}. ${q.qstn}</b></span><br><br>
+          <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px;">
+            <span style="flex: 1;"><b>Q${qNum}. ${q.qstn}</b></span>
+            <button type="button" 
+                    class="tts-button" 
+                    onclick="speakQuestion(${qNum}, '${fullText.replace(/'/g, "\\'")}', this)"
+                    title="Listen to question and all options"
+                    style="background: none; border: none; cursor: pointer; font-size: 20px; color: #0A2558; padding: 5px 10px; transition: all 0.3s;">
+              <i class='bx bx-volume-full'></i>
+            </button>
+          </div>
+          <br>
           
           <input type="radio" id="o1${qNum}" name="o${qNum}" value="${q.qstn_o1}" />
           <label class="lbl" for="o1${qNum}">${q.qstn_o1}</label><br>
@@ -977,6 +990,112 @@ while ($rowd = mysqli_fetch_array($res)) {
     function st() {
       document.getElementById("form1").submit();
     }
+
+    // ===== TEXT-TO-SPEECH FUNCTIONALITY =====
+    let currentAudio = null; // Track currently playing audio
+    const audioCache = {}; // Cache audio files to avoid repeated API calls
+
+    async function speakQuestion(questionNum, questionText, buttonElement) {
+      try {
+        // If audio is currently playing, stop it
+        if (currentAudio && !currentAudio.paused) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+          resetTTSButton(buttonElement);
+          return;
+        }
+
+        // Show loading state
+        buttonElement.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>';
+        buttonElement.disabled = true;
+
+        // Check if audio is already cached
+        const cacheKey = `q${questionNum}`;
+        if (audioCache[cacheKey]) {
+          playAudio(audioCache[cacheKey], buttonElement);
+          return;
+        }
+
+        // Make API request to generate speech
+        const response = await fetch('text_to_speech.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: questionText,
+            voice: 'alloy', // Options: alloy, echo, fable, onyx, nova, shimmer
+            question_id: questionNum
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.audio_url) {
+          // Cache the audio URL
+          audioCache[cacheKey] = data.audio_url;
+          playAudio(data.audio_url, buttonElement);
+        } else {
+          throw new Error(data.error || 'Failed to generate speech');
+        }
+
+      } catch (error) {
+        console.error('TTS Error:', error);
+        alert('Failed to generate audio. Please try again.');
+        resetTTSButton(buttonElement);
+      }
+    }
+
+    function playAudio(audioUrl, buttonElement) {
+      // Create audio element
+      currentAudio = new Audio(audioUrl);
+      
+      // Update button to show playing state
+      buttonElement.innerHTML = '<i class="bx bx-pause"></i>';
+      buttonElement.disabled = false;
+      buttonElement.style.color = '#28a745';
+
+      // Play the audio
+      currentAudio.play();
+
+      // Reset button when audio ends
+      currentAudio.addEventListener('ended', function() {
+        resetTTSButton(buttonElement);
+      });
+
+      // Handle errors
+      currentAudio.addEventListener('error', function() {
+        alert('Error playing audio. Please try again.');
+        resetTTSButton(buttonElement);
+      });
+    }
+
+    function resetTTSButton(buttonElement) {
+      buttonElement.innerHTML = '<i class="bx bx-volume-full"></i>';
+      buttonElement.disabled = false;
+      buttonElement.style.color = '#0A2558';
+    }
+
+    // Add CSS for TTS button hover effects
+    const ttsStyles = document.createElement('style');
+    ttsStyles.textContent = `
+      .tts-button:hover {
+        color: #28a745 !important;
+        transform: scale(1.1);
+      }
+      .tts-button:active {
+        transform: scale(0.95);
+      }
+      .tts-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    `;
+    document.head.appendChild(ttsStyles);
   </script>
 </body>
 

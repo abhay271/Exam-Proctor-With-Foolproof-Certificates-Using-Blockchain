@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Feature Demo - ExamFlow</title>
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .tts-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            min-height: 50px;
+        }
+
+        .tts-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .tts-button:active {
+            transform: scale(0.95);
+        }
+
+        .tts-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .options {
+            margin-left: 20px;
+        }
+
+        .option {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .voice-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .voice-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .voice-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .instructions h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .bx-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔊 Text-to-Speech Demo</h1>
+        <p class="subtitle">ExamFlow Accessibility Feature</p>
+
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>Click the speaker button to hear the question read aloud</li>
+                <li>Click again to pause/stop playback</li>
+                <li>Select different voices from the dropdown menu</li>
+                <li>Audio is cached for faster subsequent playback</li>
+            </ul>
+        </div>
+
+        <div class="voice-selector">
+            <label for="voice-select">Choose Voice:</label>
+            <select id="voice-select">
+                <option value="alloy">Alloy - Neutral, balanced</option>
+                <option value="echo">Echo - Clear, professional</option>
+                <option value="fable">Fable - Warm, storytelling</option>
+                <option value="onyx">Onyx - Deep, authoritative</option>
+                <option value="nova">Nova - Energetic, friendly</option>
+                <option value="shimmer">Shimmer - Soft, gentle</option>
+            </select>
+        </div>
+
+        <div class="demo-section">
+            <div class="question-header">
+                <span class="question-text">
+                    <strong>Q1.</strong> What is the primary purpose of blockchain technology in educational credentials?
+                </span>
+                <button class="tts-button" onclick="speakQuestion(1, this)">
+                    <i class='bx bx-volume-full'></i>
+                </button>
+            </div>
+            <div class="options">
+                <div class="option">A) To make education more expensive</div>
+                <div class="option">B) To create tamper-proof, verifiable credentials</div>
+                <div class="option">C) To replace traditional teachers</div>
+                <div class="option">D) To eliminate all paper documents</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="question-header">
+                <span class="question-text">
+                    <strong>Q2.</strong> Which United Nations Sustainable Development Goal focuses on ensuring inclusive and equitable quality education?
+                </span>
+                <button class="tts-button" onclick="speakQuestion(2, this)">
+                    <i class='bx bx-volume-full'></i>
+                </button>
+            </div>
+            <div class="options">
+                <div class="option">A) SDG 1 - No Poverty</div>
+                <div class="option">B) SDG 3 - Good Health and Well-being</div>
+                <div class="option">C) SDG 4 - Quality Education</div>
+                <div class="option">D) SDG 8 - Decent Work and Economic Growth</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <div class="question-header">
+                <span class="question-text">
+                    <strong>Q3.</strong> What is the advantage of using Text-to-Speech in educational assessments?
+                </span>
+                <button class="tts-button" onclick="speakQuestion(3, this)">
+                    <i class='bx bx-volume-full'></i>
+                </button>
+            </div>
+            <div class="options">
+                <div class="option">A) It makes exams harder to pass</div>
+                <div class="option">B) It supports students with visual impairments and learning disabilities</div>
+                <div class="option">C) It increases exam costs significantly</div>
+                <div class="option">D) It eliminates the need for reading skills</div>
+            </div>
+        </div>
+
+        <div id="status-message" class="status-message"></div>
+    </div>
+
+    <script>
+        let currentAudio = null;
+        const audioCache = {};
+        const questionTexts = {
+            1: "Question 1: What is the primary purpose of blockchain technology in educational credentials?",
+            2: "Question 2: Which United Nations Sustainable Development Goal focuses on ensuring inclusive and equitable quality education?",
+            3: "Question 3: What is the advantage of using Text-to-Speech in educational assessments?"
+        };
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-message ' + type;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        async function speakQuestion(questionNum, buttonElement) {
+            try {
+                // If audio is currently playing, stop it
+                if (currentAudio && !currentAudio.paused) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                    resetTTSButton(buttonElement);
+                    return;
+                }
+
+                // Show loading state
+                buttonElement.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>';
+                buttonElement.disabled = true;
+                showStatus('Generating audio...', 'info');
+
+                // Get selected voice
+                const voice = document.getElementById('voice-select').value;
+
+                // Check if audio is already cached
+                const cacheKey = `q${questionNum}_${voice}`;
+                if (audioCache[cacheKey]) {
+                    showStatus('Playing cached audio', 'success');
+                    playAudio(audioCache[cacheKey], buttonElement);
+                    return;
+                }
+
+                // Make API request to generate speech
+                const questionText = questionTexts[questionNum];
+                const response = await fetch('students/text_to_speech.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: questionText,
+                        voice: voice,
+                        question_id: questionNum
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.audio_url) {
+                    // Cache the audio URL
+                    audioCache[cacheKey] = 'students/' + data.audio_url;
+                    showStatus('Audio generated successfully!', 'success');
+                    playAudio(audioCache[cacheKey], buttonElement);
+                } else {
+                    throw new Error(data.error || 'Failed to generate speech');
+                }
+
+            } catch (error) {
+                console.error('TTS Error:', error);
+                showStatus('Failed to generate audio: ' + error.message, 'error');
+                resetTTSButton(buttonElement);
+            }
+        }
+
+        function playAudio(audioUrl, buttonElement) {
+            // Create audio element
+            currentAudio = new Audio(audioUrl);
+            
+            // Update button to show playing state
+            buttonElement.innerHTML = '<i class="bx bx-pause"></i>';
+            buttonElement.disabled = false;
+
+            // Play the audio
+            currentAudio.play();
+
+            // Reset button when audio ends
+            currentAudio.addEventListener('ended', function() {
+                resetTTSButton(buttonElement);
+                showStatus('Audio playback completed', 'success');
+            });
+
+            // Handle errors
+            currentAudio.addEventListener('error', function() {
+                showStatus('Error playing audio. Please try again.', 'error');
+                resetTTSButton(buttonElement);
+            });
+        }
+
+        function resetTTSButton(buttonElement) {
+            buttonElement.innerHTML = '<i class="bx bx-volume-full"></i>';
+            buttonElement.disabled = false;
+        }
+
+        // Clear cache when voice changes
+        document.getElementById('voice-select').addEventListener('change', function() {
+            showStatus('Voice changed. Audio will be regenerated on next play.', 'info');
+        });
+    </script>
+</body>
+</html>

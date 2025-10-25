@@ -1,0 +1,7 @@
+# Allow access to audio files
+<FilesMatch "\.(mp3|wav|ogg)$">
+    Header set Cache-Control "max-age=3600, public"
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
+
+Options +Indexes

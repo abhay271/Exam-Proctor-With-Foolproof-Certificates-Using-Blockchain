@@ -1,13 +1,35 @@
 <?php
 include('../config.php');
 
-// Azure OpenAI API endpoint and key
-$openai_base_url = "https://ai-graphitestorm8466ai385706727975.openai.azure.com";
-$openai_api_key = "Ax80ppCsRf3baI69t4Ww7WdIgE2ywqwmoxVQk8WXiX5rN2Q6bYv0JQQJ99BCACHYHv6XJ3w3AAAAACOGTC2b";
-$openai_deployment = "gpt-4o"; // This is the deployment name in Azure
-$openai_api_version = "2023-07-01-preview"; // Updated to the correct API version
+// Load environment variables from .env file
+$env_file = dirname(__DIR__) . '/.env';
+if (file_exists($env_file)) {
+    $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        // Skip comments
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        // Parse key=value pairs
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            // Set as environment variable if not already set
+            if (!getenv($key)) {
+                putenv("$key=$value");
+            }
+        }
+    }
+}
+
+// Azure OpenAI API endpoint and key from environment variables
+$openai_base_url = rtrim(getenv('AZURE_OPENAI_ENDPOINT') ?: "https://abhay-mh5rn2u0-eastus2.cognitiveservices.azure.com/", '/');
+$openai_api_key = getenv('AZURE_OPENAI_API_KEY') ?: "";
+$openai_deployment = getenv('AZURE_OPENAI_MODEL') ?: "gpt-4.1"; // This is the deployment name in Azure
+$openai_api_version = getenv('AZURE_OPENAI_VERSION') ?: "2024-12-01-preview";
 // Alternative deployment names to try if the first one fails
-$alternative_deployments = ["gpt4o", "gpt4", "gpt-4"];
+$alternative_deployments = ["gpt-4.1", "gpt-4o", "gpt4o", "gpt4", "gpt-4"];
 
 // Rate limiting settings
 $max_retries = 3;
